@@ -1,0 +1,11 @@
+[package]
+name = "unison"
+version = "0.1.0"
+authors = ["Robert Hurst <rhurst@e-xact.com>"]
+description = "Unison is a easy to use config loader which can collect configuration from flags, environment variables, and configuration files."
+license = "MIT"
+homepage = "https://github.com/RobertWHurst/Unison"
+documentation = "https://docs.rs/unison"
+repository = "https://github.com/RobertWHurst/Unison"
+
+[dependencies]
