@@ -6,7 +6,7 @@ homepage = "https://github.com/RobertWHurst/Unison"
 license = "MIT"
 name = "unison"
 repository = "https://github.com/RobertWHurst/Unison"
-version = "0.1.0"
+version = "0.2.0"
 
 [dependencies]
 serde = "1.0.19"

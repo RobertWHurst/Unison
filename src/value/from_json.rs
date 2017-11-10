@@ -19,7 +19,12 @@ impl From<JsonValue> for Value {
         unreachable!()
       }
       JsonValue::String(s) => Value::String(s),
-      JsonValue::Array(v) => Value::Vec(v.into_iter().map(|v| v.into()).collect()),
+      JsonValue::Array(v) => Value::HashMap(
+        v.into_iter()
+          .enumerate()
+          .map(|(i, v)| (i.to_string(), v.into()))
+          .collect(),
+      ),
       JsonValue::Object(h) => Value::HashMap(h.into_iter().map(|(k, v)| (k, v.into())).collect()),
     }
   }

@@ -14,7 +14,6 @@ impl Value {
     let value = {
       let expression = match *self {
         Value::HashMap(ref mut h) => return h.iter_mut().for_each(|(_, v)| v.eval(0)),
-        Value::Vec(ref mut v) => return v.iter_mut().for_each(|v| v.eval(0)),
         Value::String(ref s) => s,
         _ => return,
       };

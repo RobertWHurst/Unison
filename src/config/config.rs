@@ -65,10 +65,10 @@ impl Config {
   }
 
   pub fn get_from_flag(&self, path: &str) -> &Value {
-    &Value::None
+    self.inner.cli_flags.get(path)
   }
 
   pub fn get_from_env(&self, path: &str) -> &Value {
-    &Value::None
+    self.inner.env_vars.get(path)
   }
 }

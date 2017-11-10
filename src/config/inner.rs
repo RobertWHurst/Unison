@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use std::env;
 use std::path::PathBuf;
 use std::env::{current_dir, home_dir};
 use value::Value;
@@ -80,10 +82,30 @@ impl Inner {
   }
 
   pub fn gather_env_vars(application_name: &str) -> Result<Value, Error> {
-    Ok(Value::None)
+    let prelude_len = application_name.len() + 2;
+
+    let mut root = Value::from(HashMap::new());
+
+    let env_vars: Vec<_> = env::vars().filter(|&(ref k, _)| {
+      k.len() >= prelude_len &&
+        format!("{}__", application_name).to_uppercase() ==
+        k[0..prelude_len].to_uppercase()
+    }).collect();
+
+    for (ref path, ref value) in env_vars {
+      let path = path[prelude_len..]
+        .split("__")
+        .map(|p| p)// TODO: Convert to camel case
+        .collect::<Vec<&str>>()
+        .join(".");
+
+      root.set(&path, Value::String(value.to_owned()));
+    }
+    Ok(root)
   }
 
-  pub fn gather_cli_flags(application_name: &str) -> Result<Value, Error> {
+  pub fn gather_cli_flags(_: &str) -> Result<Value, Error> {
+    // TODO: Write CLI Parser
     Ok(Value::None)
   }
 }

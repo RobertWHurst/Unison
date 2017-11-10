@@ -19,7 +19,12 @@ impl<'a> From<YamlValue> for Value {
         unreachable!()
       }
       YamlValue::String(s) => Value::String(s),
-      YamlValue::Sequence(v) => Value::Vec(v.into_iter().map(|v| v.into()).collect()),
+      YamlValue::Sequence(v) => Value::HashMap(
+        v.into_iter()
+          .enumerate()
+          .map(|(i, v)| (i.to_string(), v.into()))
+          .collect(),
+      ),
       YamlValue::Mapping(h) => Value::HashMap(
         h.into_iter()
           .map(|(key, value)| {

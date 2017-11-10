@@ -1,7 +1,8 @@
+mod evaluation;
 mod from_json;
 mod from_toml;
 mod from_yaml;
-mod evaluation;
+mod parsing;
 mod traversal;
 mod value;
 
