@@ -1,6 +1,8 @@
-mod from_json_value;
-mod from_toml_value;
-mod from_yaml_value;
+mod from_json;
+mod from_toml;
+mod from_yaml;
+mod evaluation;
+mod traversal;
 mod value;
 
 pub use self::value::Value;

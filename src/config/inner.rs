@@ -1,12 +1,13 @@
 use std::path::PathBuf;
 use std::env::{current_dir, home_dir};
-use super::Data;
-use super::super::Error;
+use value::Value;
+use error::Error;
 
-pub struct Inner<'a> {
-  configuration_files: Vec<(String, Data<'a>)>,
-  enviroment_variables: Data<'a>,
-  command_line_flags: Data<'a>,
+#[derive(Debug)]
+pub struct Inner {
+  pub(crate) config_files: Vec<(String, Value)>,
+  pub(crate) env_vars: Value,
+  pub(crate) cli_flags: Value,
 }
 
 // argv flags - Ex. --test--my-key val becomes config.test.myKey === 'val' in the config. Anything after -- is ignored.
@@ -26,16 +27,16 @@ pub struct Inner<'a> {
 // ../../../.{appname}rc
 // ...
 
-impl<'a> Inner<'a> {
+impl Inner {
   pub fn load(application_name: &str) -> Result<Self, Error> {
     Ok(Self {
-      configuration_files: Self::gather_configuration_files(application_name)?,
-      enviroment_variables: Self::gather_enviroment_variables(application_name)?,
-      command_line_flags: Self::gather_command_line_flags(application_name)?,
+      config_files: Self::gather_config_files(application_name)?,
+      env_vars: Self::gather_env_vars(application_name)?,
+      cli_flags: Self::gather_cli_flags(application_name)?,
     })
   }
 
-  pub fn gather_configuration_files(application_name: &str) -> Result<Vec<(String, Data)>, Error> {
+  pub fn gather_config_files(application_name: &str) -> Result<Vec<(String, Value)>, Error> {
     let mut paths = Vec::new();
 
     if let Some(home_path) = home_dir() {
@@ -63,26 +64,26 @@ impl<'a> Inner<'a> {
     }
     paths.push(PathBuf::from(format!("/.{}rc", application_name)));
 
-    let mut configuration_files = Vec::new();
+    let mut config_files = Vec::new();
     for path in paths {
       if !path.is_file() {
         continue;
       }
 
       let path_string = path.to_str().unwrap().to_string();
-      let config_data = Data::from_path(&path).map_err(|_| Error::Noop)?;
+      let config_data = Value::from_path(&path).map_err(|e| Error::from(e))?;
 
-      configuration_files.push((path_string, config_data));
+      config_files.push((path_string, config_data));
     }
 
-    Ok(configuration_files)
+    Ok(config_files)
   }
 
-  pub fn gather_enviroment_variables(application_name: &str) -> Result<Data, Error> {
-    unimplemented!()
+  pub fn gather_env_vars(application_name: &str) -> Result<Value, Error> {
+    Ok(Value::None)
   }
 
-  pub fn gather_command_line_flags(application_name: &str) -> Result<Data, Error> {
-    unimplemented!()
+  pub fn gather_cli_flags(application_name: &str) -> Result<Value, Error> {
+    Ok(Value::None)
   }
 }

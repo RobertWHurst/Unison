@@ -7,6 +7,6 @@ mod config;
 mod value;
 mod error;
 
-pub use config::Config;
+pub use config::{Config, Kind};
 pub use value::Value;
 pub use error::Error;
