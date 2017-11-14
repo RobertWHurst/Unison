@@ -1,8 +1,9 @@
 use std::iter::FromIterator;
 use std::collections::HashMap;
+use seckey::{SecKey, SecReadGuard};
 
 /// Value is an enum that can contain any primitive value except for tuples
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Value {
   String(String),
   U64(u64),
@@ -10,8 +11,11 @@ pub enum Value {
   F64(f64),
   Bool(bool),
   HashMap(HashMap<String, Value>),
+  Secret(SecKey<Value>),
   None,
 }
+
+pub type SecretGuard<'a> = SecReadGuard<'a, Value>;
 
 macro_rules! as_n {
   ($self:ident, $n:ty) => {
@@ -82,6 +86,9 @@ impl Value {
       _ => false,
     }
   }
+  pub fn is_secret(&self) -> bool {
+    self.as_secret().is_some()
+  }
   pub fn as_str(&self) -> Option<&str> {
     match *self {
       Value::String(ref v) => Some(v),
@@ -136,6 +143,12 @@ impl Value {
       _ => None,
     }
   }
+  pub fn as_secret(&self) -> Option<SecretGuard> {
+    match *self {
+      Value::Secret(ref v) => Some(v.read()),
+      _ => None,
+    }
+  }
 }
 
 impl<'a> From<&'a str> for Value {
@@ -146,19 +159,36 @@ impl<'a> From<&'a str> for Value {
 
 impl From<String> for Value {
   fn from(string: String) -> Self {
-    if string.starts_with("map:") {
-      unimplemented!()
-    } else if string.starts_with("int:") {
+    // Secret Tag
+    if string.starts_with("secret:") {
+      let string = &string[7..];
+      if string.starts_with("secret:") {
+        panic!("Cannot repeat secret tag");
+      }
+      let value = Value::from(string);
+      let sec_key = SecKey::new(value).unwrap();
+      Value::from(sec_key)
+    }
+    // Map Tag
+    else if string.starts_with("map:") {
+      Value::from_src(&string[4..]).unwrap()
+    }
+    // Int Tag
+    else if string.starts_with("int:") {
       let int = string[4..]
         .parse::<i64>()
-        .expect(&format!("Invalid int expression {}", string));
+        .expect(&format!("Invalid int tag {}", string));
       Value::I64(int)
-    } else if string.starts_with("float:") {
+    }
+    // Float Tag
+    else if string.starts_with("float:") {
       let float = string[6..]
         .parse::<f64>()
-        .expect(&format!("Invalid float expression {}", string));
+        .expect(&format!("Invalid float tag {}", string));
       Value::F64(float)
-    } else if string.starts_with("bool:") {
+    }
+    // Bool Tag
+    else if string.starts_with("bool:") {
       if string == "bool:true" {
         Value::Bool(true)
       } else if string == "bool:false" {
@@ -166,7 +196,9 @@ impl From<String> for Value {
       } else {
         panic!("Invalid bool expression {}", string);
       }
-    } else {
+    }
+    // String
+    else {
       Value::String(string)
     }
   }
@@ -211,6 +243,12 @@ impl From<Vec<Value>> for Value {
 impl From<HashMap<String, Value>> for Value {
   fn from(hash_map: HashMap<String, Value>) -> Self {
     Value::HashMap(hash_map)
+  }
+}
+
+impl From<SecKey<Value>> for Value {
+  fn from(sec_key: SecKey<Value>) -> Self {
+    Value::Secret(sec_key)
   }
 }
 

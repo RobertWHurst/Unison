@@ -1,15 +1,24 @@
 use std::fs::OpenOptions;
 use std::path::Path;
 use value::Value;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Error as IoError, ErrorKind as IoErrorKind, Seek, SeekFrom};
+use std::io::{BufRead, BufReader, Cursor, Error as IoError, ErrorKind as IoErrorKind, Read, Seek,
+              SeekFrom};
 use error::Error;
 use config::Kind;
 
 impl Value {
-  pub(crate) fn from_path(path: &Path) -> Result<Self, Error> {
-    let mut reader = BufReader::new(OpenOptions::new().read(true).open(path)?);
+  pub fn from_src(string: &str) -> Result<Self, Error> {
+    Self::from_reader(Cursor::new(string))
+  }
 
+  pub fn from_path(path: &Path) -> Result<Self, Error> {
+    Self::from_reader(BufReader::new(OpenOptions::new().read(true).open(path)?))
+  }
+
+  pub fn from_reader<R>(mut reader: R) -> Result<Self, Error>
+  where
+    R: Seek + BufRead,
+  {
     let mut value = match Self::detect_config_type(&mut reader)? {
       Kind::Toml => Self::from_toml_reader(&mut reader)?,
       Kind::Json => Self::from_json_reader(&mut reader)?,
@@ -20,7 +29,10 @@ impl Value {
     Ok(value)
   }
 
-  fn detect_config_type(reader: &mut BufReader<File>) -> Result<Kind, IoError> {
+  fn detect_config_type<S>(reader: &mut S) -> Result<Kind, IoError>
+  where
+    S: BufRead + Seek,
+  {
     reader.seek(SeekFrom::Start(0))?;
 
     let mut src_sample = String::new();
@@ -46,9 +58,11 @@ impl Value {
     }
   }
 
-  fn from_toml_reader(reader: &mut BufReader<File>) -> Result<Value, Error> {
+  fn from_toml_reader<R>(reader: &mut R) -> Result<Value, Error>
+  where
+    R: Read + Seek,
+  {
     use toml::{from_str, Value as TomlValue};
-    use std::io::Read;
     reader.seek(SeekFrom::Start(0))?;
     let mut string = String::new();
     reader.read_to_string(&mut string).unwrap();
@@ -56,14 +70,20 @@ impl Value {
     Ok(toml_value.into())
   }
 
-  fn from_json_reader(reader: &mut BufReader<File>) -> Result<Value, Error> {
+  fn from_json_reader<R>(reader: &mut R) -> Result<Value, Error>
+  where
+    R: Read + Seek,
+  {
     use serde_json::{from_reader, Value as JsonValue};
     reader.seek(SeekFrom::Start(0))?;
     let json_value: JsonValue = from_reader(reader).map_err(|e| Error::from(e))?;
     Ok(json_value.into())
   }
 
-  fn from_yaml_reader(reader: &mut BufReader<File>) -> Result<Value, Error> {
+  fn from_yaml_reader<R>(reader: &mut R) -> Result<Value, Error>
+  where
+    R: Read + Seek,
+  {
     reader.seek(SeekFrom::Start(0))?;
 
     unimplemented!()

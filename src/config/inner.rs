@@ -40,9 +40,12 @@ impl Inner {
 
   pub fn gather_config_files(application_name: &str) -> Result<Vec<(String, Value)>, Error> {
     let mut paths = Vec::new();
+    let mut cwd_path = current_dir().unwrap();
 
     if let Some(home_path) = home_dir() {
-      paths.push(home_path.join(PathBuf::from(format!(".{}rc", application_name))));
+      if !cwd_path.starts_with(&home_path) {
+        paths.push(home_path.join(PathBuf::from(format!(".{}rc", application_name))));
+      }
       paths.push(home_path.join(PathBuf::from(format!(".{}/config", application_name))));
       paths.push(home_path.join(PathBuf::from(format!(".config/{}", application_name))));
       paths.push(home_path.join(PathBuf::from(
@@ -59,7 +62,6 @@ impl Inner {
       format!("/usr/local/etc/{}/config", application_name),
     ));
 
-    let mut cwd_path = current_dir().unwrap();
     while let Some(_) = cwd_path.file_name() {
       paths.push(cwd_path.join(PathBuf::from(format!(".{}rc", application_name))));
       cwd_path.pop();
