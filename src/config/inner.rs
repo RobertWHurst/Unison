@@ -95,17 +95,38 @@ impl Inner {
     for (ref path, ref value) in env_vars {
       let path = path[prelude_len..]
         .split("__")
-        .map(|p| p)// TODO: Convert to camel case
-        .collect::<Vec<&str>>()
+        .map(|p| p.to_lowercase())
+        .collect::<Vec<String>>()
         .join(".");
 
-      root.set(&path, Value::String(value.to_owned()));
+      root.set(&path, Value::from(value.to_owned()));
     }
     Ok(root)
   }
 
   pub fn gather_cli_flags(_: &str) -> Result<Value, Error> {
-    // TODO: Write CLI Parser
-    Ok(Value::None)
+    let mut root = Value::from(HashMap::new());
+
+    let cli_flags: Vec<_> = env::args()
+      .filter(|a| &a[0..2] == "--" && a.contains("="))
+      .map(|a| {
+        let split_index = a.find("=").unwrap();
+        let (flag, value) = a.split_at(split_index);
+        (flag[2..].to_string(), value[1..].to_string())
+      })
+      .map(|(path, value)| {
+        let path = path
+          .split("--")
+          .map(|c| c.replace("-", "_"))
+          .collect::<Vec<String>>()
+          .join(".");
+        (path, value)
+      })
+      .collect();
+
+    for (ref path, ref value) in cli_flags {
+      root.set(&path, Value::from(value.to_owned()));
+    }
+    Ok(root)
   }
 }

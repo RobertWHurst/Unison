@@ -1,5 +1,3 @@
-#![feature(refcell_replace_swap)]
-
 extern crate serde;
 extern crate serde_json;
 extern crate serde_yaml;

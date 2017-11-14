@@ -140,13 +140,35 @@ impl Value {
 
 impl<'a> From<&'a str> for Value {
   fn from(string: &'a str) -> Self {
-    Value::String(string.to_owned())
+    Value::from(string.to_owned())
   }
 }
 
 impl From<String> for Value {
   fn from(string: String) -> Self {
-    Value::String(string)
+    if string.starts_with("map:") {
+      unimplemented!()
+    } else if string.starts_with("int:") {
+      let int = string[4..]
+        .parse::<i64>()
+        .expect(&format!("Invalid int expression {}", string));
+      Value::I64(int)
+    } else if string.starts_with("float:") {
+      let float = string[6..]
+        .parse::<f64>()
+        .expect(&format!("Invalid float expression {}", string));
+      Value::F64(float)
+    } else if string.starts_with("bool:") {
+      if string == "bool:true" {
+        Value::Bool(true)
+      } else if string == "bool:false" {
+        Value::Bool(false)
+      } else {
+        panic!("Invalid bool expression {}", string);
+      }
+    } else {
+      Value::String(string)
+    }
   }
 }
 
