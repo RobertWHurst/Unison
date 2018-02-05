@@ -15,6 +15,8 @@ pub enum Value {
   None,
 }
 
+unsafe impl Send for Value {}
+
 pub type SecretGuard<'a> = SecReadGuard<'a, Value>;
 
 macro_rules! as_n {
