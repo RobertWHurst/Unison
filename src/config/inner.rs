@@ -12,6 +12,8 @@ pub struct Inner {
   pub(crate) cli_flags: Value,
 }
 
+unsafe impl Send for Inner {}
+
 // argv flags - Ex. --test--my-key val becomes config.test.myKey === 'val' in the config. Anything after -- is ignored.
 // environment variables - Ex. APPLICATION_NAME__TEST__MY_KEY="val" becomes config.test.myKey === 'val'
 // config files (replace {appname} with the name of your application) (Accepts JSON, INI, or YAML) (File extensions are optional)

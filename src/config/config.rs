@@ -9,6 +9,8 @@ pub struct Config {
   inner: Arc<Inner>,
 }
 
+unsafe impl Send for Config {}
+
 impl Config {
   pub fn load(application_name: &str) -> Result<Self, Error> {
     Ok(Self {
