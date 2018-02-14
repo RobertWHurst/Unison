@@ -1,13 +1,12 @@
-extern crate seckey;
-extern crate serde;
-extern crate serde_json;
-extern crate serde_yaml;
-extern crate toml;
+#[macro_use]
+extern crate failure;
 
+mod loaders;
 mod config;
+mod schema;
 mod value;
-mod error;
 
-pub use config::Config;
-pub use value::Value;
-pub use error::Error;
+pub use self::loaders::*;
+pub use self::config::*;
+pub use self::schema::*;
+pub use self::value::*;
